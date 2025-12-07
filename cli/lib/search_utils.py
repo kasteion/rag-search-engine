@@ -1,5 +1,6 @@
 import json
 import os
+import string
 
 DEFAULT_SEARCH_LIMIT = 5
 
@@ -15,3 +16,9 @@ def load_movies() -> list[dict]:
 def print_search_results(search_results: list[dict]):
     for i in range(len(search_results)):
         print(f"{i + 1}. {search_results[i]["title"]}")
+
+def process_text(text: str) -> str:
+    text = text.lower()
+    # text = ''.join([c for c in text if c not in string.punctuation])
+    text = text.translate(str.maketrans("", "", string.punctuation))
+    return text
