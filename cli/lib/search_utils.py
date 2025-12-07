@@ -17,8 +17,26 @@ def print_search_results(search_results: list[dict]):
     for i in range(len(search_results)):
         print(f"{i + 1}. {search_results[i]["title"]}")
 
-def process_text(text: str) -> str:
+def preprocess_text(text: str) -> str:
     text = text.lower()
     # text = ''.join([c for c in text if c not in string.punctuation])
     text = text.translate(str.maketrans("", "", string.punctuation))
+    # tokens = [token.strip() for token in text.split(" ") if len(token.strip()) > 0]
     return text
+
+def tokenize_text(text: str) -> list[str]:
+    text = preprocess_text(text)
+    tokens = text.split()
+    valid_tokens = []
+    for token in tokens:
+        if token:
+            valid_tokens.append(token)
+    return valid_tokens
+
+def has_matching_token(query_tokens: list[str], title_tokens: list[str]) -> bool:
+    for qt in query_tokens:
+        for tt in title_tokens:
+            if qt in tt:
+                return True
+    
+    return False
