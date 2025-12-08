@@ -6,12 +6,18 @@ DEFAULT_SEARCH_LIMIT = 5
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 DATA_PATH = os.path.join(PROJECT_ROOT, "data", "movies.json")
+STOPWORDS_PATH = os.path.join(PROJECT_ROOT, "data", "stopwords.txt")
 
 
 def load_movies() -> list[dict]:
     with open(DATA_PATH, "r") as f:
         data = json.load(f)
     return data["movies"]
+
+def load_stopwords() -> list[str]:
+    with open(STOPWORDS_PATH, "r") as f:
+        data = f.read().splitlines()
+    return data
 
 def print_search_results(search_results: list[dict]):
     for i in range(len(search_results)):
@@ -25,11 +31,12 @@ def preprocess_text(text: str) -> str:
     return text
 
 def tokenize_text(text: str) -> list[str]:
+    stopwords = load_stopwords()
     text = preprocess_text(text)
     tokens = text.split()
     valid_tokens = []
     for token in tokens:
-        if token:
+        if token and token not in stopwords:
             valid_tokens.append(token)
     return valid_tokens
 
