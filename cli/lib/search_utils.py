@@ -1,6 +1,7 @@
 import json
 import os
 import string
+from nltk.stem import PorterStemmer
 
 DEFAULT_SEARCH_LIMIT = 5
 
@@ -8,6 +9,7 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 DATA_PATH = os.path.join(PROJECT_ROOT, "data", "movies.json")
 STOPWORDS_PATH = os.path.join(PROJECT_ROOT, "data", "stopwords.txt")
 
+stemmer = PorterStemmer()
 
 def load_movies() -> list[dict]:
     with open(DATA_PATH, "r") as f:
@@ -37,7 +39,7 @@ def tokenize_text(text: str) -> list[str]:
     valid_tokens = []
     for token in tokens:
         if token and token not in stopwords:
-            valid_tokens.append(token)
+            valid_tokens.append(stemmer.stem(token))
     return valid_tokens
 
 def has_matching_token(query_tokens: list[str], title_tokens: list[str]) -> bool:
