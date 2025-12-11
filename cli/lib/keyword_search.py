@@ -1,14 +1,26 @@
 from .search_utils import load_movies, tokenize_text, has_matching_token
+from .inverted_index import InvertedIndex
 
-def keyword_search(keyword: str, limit: int = 5) -> list[str]:
-    movies = load_movies()
-    query_tokens = tokenize_text(keyword)
-    # search_results = [movie for movie in movies if process_text(keyword) in process_text(movie["title"])]
-    search_results = []
-    for movie in movies:
-        title_tokens = tokenize_text(movie["title"])
-        if has_matching_token(query_tokens, title_tokens):
-            search_results.append(movie)
-    search_results = search_results[:limit]
-    search_results.sort(key=id)
-    return search_results[:limit]
+class KeywordSearch:
+    index: InvertedIndex
+
+    def __init__(self, index: InvertedIndex):
+        self.index = index
+
+    def keyword_search(self, keyword: str, limit: int = 5) -> list[str]:
+        movies = load_movies()
+        query_tokens = tokenize_text(keyword)
+        # search_results = [movie for movie in movies if process_text(keyword) in process_text(movie["title"])]
+        search_results = []
+        # for movie in movies:
+        #     title_tokens = tokenize_text(movie["title"])
+        #     if has_matching_token(query_tokens, title_tokens):
+        #         search_results.append(movie)
+        for token in query_tokens:
+            search_results.extend(self.index.get_documents(token))
+            if len(search_results) >= limit:
+                break
+
+        search_results = search_results[:limit]
+        search_results.sort(key=id)
+        return search_results[:limit]

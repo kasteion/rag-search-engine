@@ -25,7 +25,7 @@ class InvertedIndex:
         if not ids:
             return []
         
-        return sorted(ids)
+        return [self.docmap.get(id) for id in sorted(ids)]
     
     def build(self):
         movies = load_movies()
@@ -41,3 +41,13 @@ class InvertedIndex:
         
         with open('cache/docmap.pkl', 'wb') as f:
             pickle.dump(self.docmap, f)
+
+    def load(self):
+        if not os.path.exists('cache/index.pkl') or not os.path.exists('cache/docmap.pkl'):
+            raise Exception("Files don't exist, build the index first!")
+        
+        with open('cache/index.pkl', 'rb') as f:
+            self.index = pickle.load(f)
+                
+        with open('cache/docmap.pkl', 'rb') as f:
+            self.docmap = pickle.load(f)

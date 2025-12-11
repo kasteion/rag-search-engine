@@ -23,7 +23,7 @@ def load_stopwords() -> list[str]:
 
 def print_search_results(search_results: list[dict]):
     for i in range(len(search_results)):
-        print(f"{i + 1}. {search_results[i]["title"]}")
+        print(f"{i + 1}. {search_results[i]["id"]} {search_results[i]["title"]}")
 
 def preprocess_text(text: str) -> str:
     text = text.lower()
