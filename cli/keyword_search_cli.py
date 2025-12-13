@@ -17,6 +17,11 @@ def main() -> None:
 
     subparsers.add_parser("build", help="Build movies index")
 
+    tf_parser = subparsers.add_parser("tf", help="Search tearm frequency")
+    tf_parser.add_argument("doc_id", type=int, help="Doc id")
+    tf_parser.add_argument("term", type=str, help="Search term")
+
+
     args = parser.parse_args()
 
     index = InvertedIndex()
@@ -35,6 +40,14 @@ def main() -> None:
         case "build":
             index.build()
             index.save()
+        case "tf":
+            try:
+                index.load()
+            except Exception as e:
+                print(e)
+                return
+            tf = index.get_tf(args.doc_id, args.term)
+            print(f"Term frequency of '{args.term}' in document '{args.doc_id}': {tf}")
         case _:
             parser.print_help()
 
