@@ -1,4 +1,4 @@
-from .search_utils import load_movies, tokenize_text, has_matching_token
+from .search_utils import tokenize_text
 from .inverted_index import InvertedIndex
 
 class KeywordSearch:
@@ -8,7 +8,7 @@ class KeywordSearch:
         self.index = index
 
     def keyword_search(self, keyword: str, limit: int = 5) -> list[str]:
-        movies = load_movies()
+        # movies = load_movies()
         query_tokens = tokenize_text(keyword)
         # search_results = [movie for movie in movies if process_text(keyword) in process_text(movie["title"])]
         search_results = []
@@ -24,3 +24,4 @@ class KeywordSearch:
         search_results = search_results[:limit]
         search_results.sort(key=id)
         return search_results[:limit]
+ 

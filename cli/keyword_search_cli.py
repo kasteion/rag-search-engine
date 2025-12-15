@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import argparse
-import json
 
 from lib.keyword_search import KeywordSearch
 from lib.search_utils import print_search_results, DEFAULT_SEARCH_LIMIT
@@ -17,10 +16,12 @@ def main() -> None:
 
     subparsers.add_parser("build", help="Build movies index")
 
-    tf_parser = subparsers.add_parser("tf", help="Search tearm frequency")
+    tf_parser = subparsers.add_parser("tf", help="Search term frequency")
     tf_parser.add_argument("doc_id", type=int, help="Doc id")
     tf_parser.add_argument("term", type=str, help="Search term")
 
+    idf_parser = subparsers.add_parser("idf", help="Search inverse document frequency")
+    idf_parser.add_argument("term", type=str, help="Search term")
 
     args = parser.parse_args()
 
@@ -41,13 +42,13 @@ def main() -> None:
             index.build()
             index.save()
         case "tf":
-            try:
-                index.load()
-            except Exception as e:
-                print(e)
-                return
+            index.load()
             tf = index.get_tf(args.doc_id, args.term)
             print(f"Term frequency of '{args.term}' in document '{args.doc_id}': {tf}")
+        case "idf":
+            index.load()
+            idf = index.get_idf(args.term)
+            print(f"Inverse document frequency of '{args.term}': {idf:.2f}")
         case _:
             parser.print_help()
 

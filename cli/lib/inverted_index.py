@@ -1,11 +1,13 @@
 import os
 import pickle
+import math
+from collections import Counter, defaultdict
+
 from .search_utils import (
     tokenize_text, 
     load_movies,
     CACHE_DIR
 )
-from collections import Counter, defaultdict
 
 class InvertedIndex:
     index: dict = {}
@@ -88,3 +90,10 @@ class InvertedIndex:
             return 0
         
         return term
+
+    def get_idf(self, term):
+        tokens = tokenize_text(term)
+        if len(tokens) != 1:
+            raise ValueError("term must be a single token")
+        
+        return math.log((len(self.docmap) + 1) / (len(self.index.get(tokens[0], [])) + 1))
