@@ -97,3 +97,13 @@ class InvertedIndex:
             raise ValueError("term must be a single token")
         
         return math.log((len(self.docmap) + 1) / (len(self.index.get(tokens[0], [])) + 1))
+
+    def get_bm25_idf(self, term:str):
+        tokens = tokenize_text(term)
+        if len(tokens) != 1:
+            raise ValueError("term must be a single token")\
+        
+        N = len(self.docmap)
+        df = len(self.index.get(tokens[0], []))
+        
+        return math.log((N - df + 0.5)/(df + 0.5) + 1)

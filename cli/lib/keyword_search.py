@@ -24,4 +24,9 @@ class KeywordSearch:
         search_results = search_results[:limit]
         search_results.sort(key=id)
         return search_results[:limit]
+    
+    def bm25_idf_command(self, term:str)->float:
+        self.index.load()
+        bm25idf = self.index.get_bm25_idf(term)
+        return bm25idf
  
