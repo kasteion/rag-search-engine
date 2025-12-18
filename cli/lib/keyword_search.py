@@ -1,4 +1,4 @@
-from .search_utils import tokenize_text
+from .search_utils import tokenize_text, BM25_K1
 from .inverted_index import InvertedIndex
 
 class KeywordSearch:
@@ -29,4 +29,8 @@ class KeywordSearch:
         self.index.load()
         bm25idf = self.index.get_bm25_idf(term)
         return bm25idf
+    
+    def bm25_tf_command(self, doc_id, term:str, k1=BM25_K1):
+        self.index.load()
+        return self.index.get_bm25_tf(doc_id, term, k1)
  

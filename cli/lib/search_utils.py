@@ -10,6 +10,8 @@ DATA_PATH = os.path.join(PROJECT_ROOT, "data", "movies.json")
 STOPWORDS_PATH = os.path.join(PROJECT_ROOT, "data", "stopwords.txt")
 CACHE_DIR = os.path.join(PROJECT_ROOT, "cache")
 
+BM25_K1 = 1.5
+
 stemmer = PorterStemmer()
 
 def load_movies() -> list[dict]:
@@ -34,14 +36,22 @@ def preprocess_text(text: str) -> str:
     return text
 
 def tokenize_text(text: str) -> list[str]:
-    stopwords = load_stopwords()
     text = preprocess_text(text)
     tokens = text.split()
     valid_tokens = []
     for token in tokens:
-        if token and token not in stopwords:
-            valid_tokens.append(stemmer.stem(token))
-    return valid_tokens
+        if token:
+            valid_tokens.append(token)
+    stop_words = load_stopwords()
+    filtered_words = []
+    for word in valid_tokens:
+        if word not in stop_words:
+            filtered_words.append(word)
+    stemmer = PorterStemmer()
+    stemmed_words = []
+    for word in filtered_words:
+        stemmed_words.append(stemmer.stem(word))
+    return stemmed_words
 
 def has_matching_token(query_tokens: list[str], title_tokens: list[str]) -> bool:
     for qt in query_tokens:

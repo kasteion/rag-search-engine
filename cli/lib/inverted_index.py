@@ -6,7 +6,8 @@ from collections import Counter, defaultdict
 from .search_utils import (
     tokenize_text, 
     load_movies,
-    CACHE_DIR
+    CACHE_DIR,
+    BM25_K1
 )
 
 class InvertedIndex:
@@ -24,17 +25,9 @@ class InvertedIndex:
 
     def __add_document(self, doc_id, text):
         tokens = tokenize_text(text)
-        for token in tokens:
-            ids:set = self.index.get(token)
-
-            if ids:
-                ids.add(doc_id)
-            else:
-                ids = set([doc_id])
-            
-            self.index[token] = ids
-        
-        self.term_frequencies[doc_id] = Counter(tokens)
+        for token in set(tokens):
+            self.index[token].add(doc_id)
+        self.term_frequencies[doc_id].update(tokens)
 
     def get_documents(self, term: str):
         term = term.lower()
@@ -85,7 +78,7 @@ class InvertedIndex:
         if not doc:
             return 0
         
-        term = doc.get(term)
+        term = doc.get(tokens[0])
         if not term:
             return 0
         
@@ -107,3 +100,7 @@ class InvertedIndex:
         df = len(self.index.get(tokens[0], []))
         
         return math.log((N - df + 0.5)/(df + 0.5) + 1)
+
+    def get_bm25_tf(self, doc_id, term, k1=BM25_K1):
+        tf = self.get_tf(doc_id, term)
+        return (tf * (k1 + 1)) / (tf + k1)
