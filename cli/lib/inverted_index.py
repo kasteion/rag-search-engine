@@ -12,11 +12,6 @@ from .search_utils import (
 )
 
 class InvertedIndex:
-    # index: dict = {}
-    # docmap: dict = {}
-    # term_frequencies: dict = {}
-    # doc_lengths: dict = {}
-
     def __init__(self) -> None:
         self.index = defaultdict(set)
         self.docmap: dict[int, dict] = {}
@@ -127,3 +122,24 @@ class InvertedIndex:
             return 0.0
         
         return sum([self.doc_lengths[i] for i in self.doc_lengths]) / len(self.doc_lengths)
+    
+    def bm25(self, doc_id, term):
+        bm25_tf = self.get_bm25_tf(doc_id, term)
+        bm25_idf = self.get_bm25_idf(term)
+        return bm25_tf * bm25_idf
+    
+    def bm25_search(self, query, limit):
+        tokens = tokenize_text(query)
+        scores= {}
+        for doc_id in self.docmap:
+            bm25_total = 0
+            for term in tokens:
+                bm25_total += self.bm25(doc_id, term)
+            scores[doc_id] = bm25_total
+
+        scores = sorted(scores.items(), key=lambda item: item[1], reverse=True)
+
+        results = []
+        for doc_id, score in scores[:limit]:
+            results.append({ 'id': doc_id, 'title': self.docmap[doc_id]['title'], 'score': score})
+        return results

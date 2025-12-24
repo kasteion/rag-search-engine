@@ -1,4 +1,4 @@
-from .search_utils import tokenize_text, BM25_K1, BM25_B
+from .search_utils import tokenize_text, BM25_K1, BM25_B, DEFAULT_SEARCH_LIMIT
 from .inverted_index import InvertedIndex
 
 class KeywordSearch:
@@ -33,4 +33,9 @@ class KeywordSearch:
     def bm25_tf_command(self, doc_id, term:str, k1=BM25_K1, b=BM25_B):
         self.index.load()
         return self.index.get_bm25_tf(doc_id, term, k1, b)
+    
+    def bm25_search_command(self, query:str, limit=DEFAULT_SEARCH_LIMIT):
+        self.index.load()
+        return self.index.bm25_search(query, limit)
+
  
