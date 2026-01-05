@@ -4,7 +4,7 @@ import os
 import json
 import textwrap
 
-from .search_utils import CACHE_DIR, DATA_PATH, DEFAULT_SEARCH_LIMIT
+from .search_utils import CACHE_DIR, DATA_PATH, DEFAULT_SEARCH_LIMIT, DEFAULT_CHUNK_SIZE
 
 class SemanticSearch:
     def __init__(self)->None:
@@ -117,3 +117,32 @@ def search_command(query, limit=DEFAULT_SEARCH_LIMIT):
         doc = results[i][1]
         print(f"{i+1}. {doc['title']} (score: {score:.4f})")
         print(textwrap.shorten(doc['description'], width=80, placeholder="..."))
+
+def chunk_command(text:str, chunk_size=DEFAULT_CHUNK_SIZE):
+    words = text.split()
+    start, end = 0, chunk_size
+    chunks = []
+    while end < len(words):
+        chunks.append(' '.join(words[start:end]))
+        start = end
+        end = start + chunk_size
+    
+    if end >= len(words):
+        chunks.append(' '.join(words[start:]))
+
+    print(f"Chunking {len(text)} characters")
+    for i in range(len(chunks)):
+        print(f"{i+1}. {chunks[i]}")
+
+def fixed_size_chunking(text: str, chunk_size: int = DEFAULT_CHUNK_SIZE) -> list[str]:
+    words = text.split()
+    chunks = []
+
+    n_words = len(words)
+    i = 0
+    while i < n_words:
+        chunk_words = words[i : i + chunk_size]
+        chunks.append(" ".join(chunk_words))
+        i += chunk_size
+
+    return chunks

@@ -13,6 +13,8 @@ CACHE_DIR = os.path.join(PROJECT_ROOT, "cache")
 BM25_K1 = 1.5
 BM25_B = 0.75
 
+DEFAULT_CHUNK_SIZE = 200
+
 stemmer = PorterStemmer()
 
 def load_movies() -> list[dict]:
