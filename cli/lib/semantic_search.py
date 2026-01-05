@@ -3,13 +3,16 @@ import numpy as np
 import os
 import json
 import textwrap
+import re
 
 from .search_utils import (
     CACHE_DIR, 
     DATA_PATH, 
     DEFAULT_SEARCH_LIMIT, 
     DEFAULT_CHUNK_SIZE,
-    DEFAULT_CHUNK_OVERLAP
+    DEFAULT_CHUNK_OVERLAP,
+    DEFAULT_SEMANTIC_CHUNK_SIZE,
+    DEFAULT_SEMANTIC_CHUNK_OVERLAP
 )
 
 class SemanticSearch:
@@ -162,3 +165,21 @@ def fixed_size_chunking(
         i += chunk_size - overlap
 
     return chunks
+
+def semantic_chunk_command(text: str, chunk_size=DEFAULT_SEMANTIC_CHUNK_SIZE, overlap=DEFAULT_SEMANTIC_CHUNK_OVERLAP):
+    print(f"Semantically chunking {len(text)} characters")
+    sentences = re.split(r'(?<=[.!?])\s+', text)
+    chunks = []
+
+    i = 0
+    while i < len(sentences):
+        chunk_sentences = sentences[i: i + chunk_size]
+        if chunks and len(chunk_sentences) <= overlap:
+            break
+
+        chunks.append(" ".join(chunk_sentences))
+        i += chunk_size - overlap
+    
+    for i in range(len(chunks)):
+        print(f"{i + 1}. {chunks[i]}")
+

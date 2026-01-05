@@ -16,6 +16,9 @@ BM25_B = 0.75
 DEFAULT_CHUNK_SIZE = 200
 DEFAULT_CHUNK_OVERLAP = 0
 
+DEFAULT_SEMANTIC_CHUNK_SIZE = 4
+DEFAULT_SEMANTIC_CHUNK_OVERLAP = 0
+
 stemmer = PorterStemmer()
 
 def load_movies() -> list[dict]:
