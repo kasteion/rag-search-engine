@@ -4,7 +4,13 @@ import os
 import json
 import textwrap
 
-from .search_utils import CACHE_DIR, DATA_PATH, DEFAULT_SEARCH_LIMIT, DEFAULT_CHUNK_SIZE
+from .search_utils import (
+    CACHE_DIR, 
+    DATA_PATH, 
+    DEFAULT_SEARCH_LIMIT, 
+    DEFAULT_CHUNK_SIZE,
+    DEFAULT_CHUNK_OVERLAP
+)
 
 class SemanticSearch:
     def __init__(self)->None:
@@ -118,10 +124,10 @@ def search_command(query, limit=DEFAULT_SEARCH_LIMIT):
         print(f"{i+1}. {doc['title']} (score: {score:.4f})")
         print(textwrap.shorten(doc['description'], width=80, placeholder="..."))
 
-def chunk_command(text:str, chunk_size=DEFAULT_CHUNK_SIZE, overlap=0):
+def chunk_command(text:str, chunk_size=DEFAULT_CHUNK_SIZE, overlap=DEFAULT_CHUNK_OVERLAP):
     if overlap > chunk_size:
         overlap = chunk_size
-        
+
     words = text.split()
     start, end = 0, chunk_size
     chunks = []
@@ -137,7 +143,11 @@ def chunk_command(text:str, chunk_size=DEFAULT_CHUNK_SIZE, overlap=0):
     for i in range(len(chunks)):
         print(f"{i+1}. {chunks[i]}")
 
-def fixed_size_chunking(text: str, chunk_size: int = DEFAULT_CHUNK_SIZE) -> list[str]:
+def fixed_size_chunking(
+    text: str,
+    chunk_size: int = DEFAULT_CHUNK_SIZE,
+    overlap: int = DEFAULT_CHUNK_OVERLAP,
+) -> list[str]:
     words = text.split()
     chunks = []
 
@@ -145,7 +155,10 @@ def fixed_size_chunking(text: str, chunk_size: int = DEFAULT_CHUNK_SIZE) -> list
     i = 0
     while i < n_words:
         chunk_words = words[i : i + chunk_size]
+        if chunks and len(chunk_words) <= overlap:
+            break
+
         chunks.append(" ".join(chunk_words))
-        i += chunk_size
+        i += chunk_size - overlap
 
     return chunks
