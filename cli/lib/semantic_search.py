@@ -118,13 +118,16 @@ def search_command(query, limit=DEFAULT_SEARCH_LIMIT):
         print(f"{i+1}. {doc['title']} (score: {score:.4f})")
         print(textwrap.shorten(doc['description'], width=80, placeholder="..."))
 
-def chunk_command(text:str, chunk_size=DEFAULT_CHUNK_SIZE):
+def chunk_command(text:str, chunk_size=DEFAULT_CHUNK_SIZE, overlap=0):
+    if overlap > chunk_size:
+        overlap = chunk_size
+        
     words = text.split()
     start, end = 0, chunk_size
     chunks = []
     while end < len(words):
         chunks.append(' '.join(words[start:end]))
-        start = end
+        start = end - overlap
         end = start + chunk_size
     
     if end >= len(words):
