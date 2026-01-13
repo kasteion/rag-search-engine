@@ -25,6 +25,9 @@ CHUNK_METADATA_PATH = os.path.join(CACHE_DIR, "chunk_metadata.json")
 
 DEFAULT_SEARCH_CHUNK_LIMIT = 5
 
+DEFAULT_HYBRID_SEARCH_ALPHA = 0.5
+DEFAULT_HYBRID_SEARCH_LIMIT = 5
+
 stemmer = PorterStemmer()
 
 def load_movies() -> list[dict]:

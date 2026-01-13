@@ -141,5 +141,5 @@ class InvertedIndex:
 
         results = []
         for doc_id, score in scores[:limit]:
-            results.append({ 'id': doc_id, 'title': self.docmap[doc_id]['title'], 'score': score})
+            results.append({ 'id': doc_id, 'title': self.docmap[doc_id]['title'], 'description': self.docmap[doc_id]['description'][:100], 'score': score})
         return results
