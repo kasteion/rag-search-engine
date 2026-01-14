@@ -2,7 +2,8 @@ import argparse
 
 from lib.hybrid_search import (
     normalize_scores_command,
-    weighted_search_command
+    weighted_search_command,
+    rrf_search_command,
 )
 from lib.search_utils import (
     DEFAULT_HYBRID_SEARCH_ALPHA,
@@ -21,6 +22,11 @@ def main() -> None:
     weighted_search_parser.add_argument("--alpha", type=float, default=DEFAULT_HYBRID_SEARCH_ALPHA, help="Configurable alpha")
     weighted_search_parser.add_argument("--limit", type=int, default=DEFAULT_HYBRID_SEARCH_LIMIT, help="Results limit")
 
+    rrf_search_parser = subparsers.add_parser("rrf-search", help="Reciprocal Rank Fusion")
+    rrf_search_parser.add_argument("query", type=str, help="Query to search")
+    rrf_search_parser.add_argument("-k", type=int, default=60, help="k constant")
+    rrf_search_parser.add_argument("--limit", type=int, default=5, help="Results limit")
+
     args = parser.parse_args()
 
     match args.command:
@@ -28,6 +34,8 @@ def main() -> None:
             normalize_scores_command(args.scores)
         case "weighted-search":
             weighted_search_command(args.query, args.alpha, args.limit)
+        case "rrf-search":
+            rrf_search_command(args.query, args.k, args.limit)
         case _:
             parser.print_help()
 
