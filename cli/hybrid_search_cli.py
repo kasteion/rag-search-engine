@@ -4,6 +4,7 @@ from lib.hybrid_search import (
     normalize_scores_command,
     weighted_search_command,
     rrf_search_command,
+    enhance_query
 )
 from lib.search_utils import (
     DEFAULT_HYBRID_SEARCH_ALPHA,
@@ -26,6 +27,7 @@ def main() -> None:
     rrf_search_parser.add_argument("query", type=str, help="Query to search")
     rrf_search_parser.add_argument("-k", type=int, default=60, help="k constant")
     rrf_search_parser.add_argument("--limit", type=int, default=5, help="Results limit")
+    rrf_search_parser.add_argument("--enhance", type=str, choices=["spell"], help="Query enhancement method")
 
     args = parser.parse_args()
 
@@ -35,6 +37,8 @@ def main() -> None:
         case "weighted-search":
             weighted_search_command(args.query, args.alpha, args.limit)
         case "rrf-search":
+            if args.enhance:
+                args.query = enhance_query(args.enhance, args.query)
             rrf_search_command(args.query, args.k, args.limit)
         case _:
             parser.print_help()

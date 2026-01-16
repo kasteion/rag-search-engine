@@ -1,9 +1,15 @@
 import os
 import json
 
+from dotenv import load_dotenv
+from google import genai
+
 from .keyword_search import InvertedIndex
 from .semantic_search import ChunkedSemanticSearch
 from .search_utils import DATA_PATH
+
+load_dotenv()
+api_key = os.environ.get("GEMINI_API_KEY")
 
 
 class HybridSearch:
@@ -178,3 +184,29 @@ def rrf_search_command(query: str, k: int, limit:int):
         print(f"     RRF Score: {r['rrf_score']}")
         print(f"     BM25 Rank: {r['bm25_rank']}, Semantic: {r['semantic_rank']}")
         print(f"     {r['description']}")
+
+def enhance_query(method: str, query:str):
+    client = genai.Client(api_key=api_key)
+
+    match method:
+        case "spell":
+            spell_prompt = f"""Fix any spelling errors in this movie search query.
+
+            Only correct obvious typos. Don't change correctly spelled words.
+            
+            Query: "{query}"
+            
+            If no errors, return the original query.
+            """
+
+            response = client.models.generate_content(model="gemini-2.5-flash", contents=spell_prompt)
+
+            if response.text is None:
+                return query
+            
+            enhanced_query = response.text
+
+        case _:
+            return query
+    print(f"Enhanced query ({method}): '{query}' -> '{enhanced_query}'")
+    return enhanced_query
