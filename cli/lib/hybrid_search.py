@@ -187,6 +187,7 @@ def rrf_search_command(query: str, k: int, limit:int):
 
 def enhance_query(method: str, query:str):
     client = genai.Client(api_key=api_key)
+    model = "gemini-2.5-flash"
 
     match method:
         case "spell":
@@ -199,13 +200,38 @@ def enhance_query(method: str, query:str):
             If no errors, return the original query.
             """
 
-            response = client.models.generate_content(model="gemini-2.5-flash", contents=spell_prompt)
+            response = client.models.generate_content(model=model, contents=spell_prompt)
 
             if response.text is None:
                 return query
             
             enhanced_query = response.text
+        
+        case "rewrite":
+            rewrite_prompt = f"""Rewrite this movie search query to be more specific and searchable.
+            
+            Original: "{query}"
+            
+            Consider:
+            - Common movie knowledge (famous actors, popular films)
+            - Genre conventions (horror = scary, animation = cartoon)
+            - Keep it concise (under 10 words)
+            - It should be a google style search query that's very specific
+            - Don't use boolean logic
+            
+            Examples:
+            - "that bear movie where leo gets attacked" -> "The Revenant Leonardo DiCaprio bear attack"
+            - "movie about bear in london with marmalade" -> "Paddington London marmalade"
+            - "scary movie with bear from few years ago" -> "bear horror movie 2015-2020"
+            """
 
+            response = client.models.generate_content(model=model, contents=rewrite_prompt)
+
+            if response.text is None:
+                return query
+            
+            enhanced_query = response.text
+            
         case _:
             return query
     print(f"Enhanced query ({method}): '{query}' -> '{enhanced_query}'")
