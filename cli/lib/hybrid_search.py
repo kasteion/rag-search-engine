@@ -231,6 +231,29 @@ def enhance_query(method: str, query:str):
                 return query
             
             enhanced_query = response.text
+        
+        case "expand":
+            expand_prompt = f"""Expand this movie search query with related terms.
+            
+            Add synonyms and related concepts that might appear in movie descriptions.
+            Keep expansions relevant and focused.
+            This will be appended to the original query.
+            
+            Examples:
+            
+            - "scary bear movie" -> "scary horror grizzly bear movie terrifying film"
+            - "action movie with bear" -> "action thriller bear chase fight adventure"
+            - "comedy with bear" -> "comedy funny bear humor lighthearted"
+
+            Query: "{query}"
+            """
+
+            response = client.models.generate_content(model=model, contents=expand_prompt)
+
+            if response.text is None:
+                return query
+            
+            enhanced_query = response.text
             
         case _:
             return query
