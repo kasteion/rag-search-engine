@@ -4,7 +4,8 @@ from lib.hybrid_search import (
     normalize_scores_command,
     weighted_search_command,
     rrf_search_command,
-    enhance_query
+    enhance_query,
+    individual_rerank_command,
 )
 from lib.search_utils import (
     DEFAULT_HYBRID_SEARCH_ALPHA,
@@ -28,6 +29,7 @@ def main() -> None:
     rrf_search_parser.add_argument("-k", type=int, default=60, help="k constant")
     rrf_search_parser.add_argument("--limit", type=int, default=5, help="Results limit")
     rrf_search_parser.add_argument("--enhance", type=str, choices=["spell", "rewrite", "expand"], help="Query enhancement method")
+    rrf_search_parser.add_argument("--rerank-method", type=str, choices=["individual"], help="LLM rerank")
 
     args = parser.parse_args()
 
@@ -39,7 +41,12 @@ def main() -> None:
         case "rrf-search":
             if args.enhance:
                 args.query = enhance_query(args.enhance, args.query)
-            rrf_search_command(args.query, args.k, args.limit)
+
+            match args.rerank_method:
+                case "individual":
+                    individual_rerank_command(args.query, args.k, args.limit)
+                case _:
+                    rrf_search_command(args.query, args.k, args.limit)
         case _:
             parser.print_help()
 

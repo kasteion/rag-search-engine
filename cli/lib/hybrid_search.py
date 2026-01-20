@@ -1,5 +1,6 @@
 import os
 import json
+import time
 
 from dotenv import load_dotenv
 from google import genai
@@ -171,13 +172,18 @@ def weighted_search_command(query:str, alpha:float, limit:int):
 def rrf_score(rank, k=60):
     return 1 / (k + rank)
 
-def rrf_search_command(query: str, k: int, limit:int):
+def rrf_search(query: str, k: int, limit: int):
     with open(DATA_PATH, 'r') as f:
         data = json.load(f)
     
     search = HybridSearch(data['movies'])
 
     results = search.rrf_search(query, k, limit)
+
+    return results, search
+
+def rrf_search_command(query: str, k: int, limit:int):
+    results, _ = rrf_search(query, k, limit)
 
     for i, r in enumerate(results, start=1):
         print(f"{i}. {r['title']}")
@@ -259,3 +265,60 @@ def enhance_query(method: str, query:str):
             return query
     print(f"Enhanced query ({method}): '{query}' -> '{enhanced_query}'")
     return enhanced_query
+
+def individual_rerank_command(query: str, k: int, limit:int):
+    client = genai.Client(api_key=api_key)
+    model = "gemini-2.5-flash"
+
+    results, search = rrf_search(query, k, limit * 5)
+
+    print(f"Reranking top {limit} results using individual method..")
+    print(f"Reciprocal Rank Fusion Results for 'family movie about bears in the woods' (k={k}):")
+
+    for i, r in enumerate(results):
+        doc = search.semantic_search.document_map.get(r['id'])
+
+        rerank_prompt = f"""Rate how well this movie matches the search query.
+        
+        Query: "{query}"
+        
+        Movie: {doc.get("title", "")} - {doc.get("description", "")}
+        
+        Consider:
+        - Direct relevance to query
+        - User intent (what they're looking for)
+        - Content appropriateness
+        
+        Rate 0-10 (10 = perfect match).
+        Give me ONLY the number in your response, no other text or explanation.
+        
+        Score:"""
+
+        try:
+            rerank_score = client.models.generate_content(model=model, contents=rerank_prompt)
+            results[i]["rerank_score"] = float(rerank_score.text)
+            print(r.get("title", ""), r.get("rerank_score", ""))
+        except Exception as e:
+            print(e)
+        
+        time.sleep(30)
+
+        # if r['id'] == 2953:
+        #     r['rerank_score'] = 10.0
+        # elif r['id'] == 3563:
+        #     r['rerank_score'] = 9.0
+        # elif r['id'] == 2526:
+        #     r['rerank_score'] = 9.0
+        # else:
+        #     r['rerank_score'] = 0.0
+
+    
+    results = sorted(results, key=lambda r: r['rerank_score'], reverse=True)[:limit]
+    
+    for i, r in enumerate(results, start=1):
+        print(f"{i}. {r['title']}")
+        print(f"     Rerank Score: {r['rerank_score']}/10")
+        print(f"     RRF Score: {r['rrf_score']}")
+        print(f"     BM25 Rank: {r['bm25_rank']}, Semantic: {r['semantic_rank']}")
+        print(f"     {r['description']}")
+
