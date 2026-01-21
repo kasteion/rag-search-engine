@@ -303,16 +303,6 @@ def individual_rerank_command(query: str, k: int, limit:int):
         
         time.sleep(30)
 
-        # if r['id'] == 2953:
-        #     r['rerank_score'] = 10.0
-        # elif r['id'] == 3563:
-        #     r['rerank_score'] = 9.0
-        # elif r['id'] == 2526:
-        #     r['rerank_score'] = 9.0
-        # else:
-        #     r['rerank_score'] = 0.0
-
-    
     results = sorted(results, key=lambda r: r['rerank_score'], reverse=True)[:limit]
     
     for i, r in enumerate(results, start=1):
@@ -355,10 +345,6 @@ def batch_rerank_command(query: str, k: int, limit:int):
             results[i]['rerank_rank'] = int(s)
     except Exception as e:
         print(e)
-
-    # for i, r in enumerate(results):
-    #     if r['id'] == 2953:
-    #         r['rerank_rank'] = 1
 
     results = sorted(results, key=lambda r: r.get('rerank_rank', limit * 5))[:limit]
     
