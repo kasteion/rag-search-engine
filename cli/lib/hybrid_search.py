@@ -322,3 +322,49 @@ def individual_rerank_command(query: str, k: int, limit:int):
         print(f"     BM25 Rank: {r['bm25_rank']}, Semantic: {r['semantic_rank']}")
         print(f"     {r['description']}")
 
+def batch_rerank_command(query: str, k: int, limit:int):
+    client = genai.Client(api_key=api_key)
+    model = "gemini-2.5-flash"
+
+    results, search = rrf_search(query, k, limit * 5)
+
+    doc_list_str = ""
+    for i, r in enumerate(results, start=1):
+        doc = search.semantic_search.document_map.get(r['id'])
+        doc_list_str = doc_list_str + f"{i}. {doc['title']}: {doc['description'].replace('\n', '')}\n\n"
+
+    rerank_prompt = f"""Rank these movies by relevance to the search query.
+    
+    Query: "{query}"
+    
+    Movies:
+    {str(doc_list_str)}
+    
+    Return ONLY the IDs in order of relevance (best match first). Return a valid JSON list, nothing else. For example:
+    
+    [75, 12, 34, 2, 1]
+    """
+
+    print(f"Reranking top {limit} results using individual method...")
+    
+    try:
+        response = client.models.generate_content(model=model, contents=rerank_prompt)
+        rerank_scores = json.loads(response.text.replace('```json', '').replace('```', ''))
+
+        for i, s in enumerate(rerank_scores):
+            results[i]['rerank_rank'] = int(s)
+    except Exception as e:
+        print(e)
+
+    # for i, r in enumerate(results):
+    #     if r['id'] == 2953:
+    #         r['rerank_rank'] = 1
+
+    results = sorted(results, key=lambda r: r.get('rerank_rank', limit * 5))[:limit]
+    
+    for i, r in enumerate(results, start=1):
+        print(f"{i}. {r['title']}")
+        print(f"     Rerank Rank: {r.get('rerank_rank', limit * 5)}")
+        print(f"     RRF Score: {r['rrf_score']}")
+        print(f"     BM25 Rank: {r['bm25_rank']}, Semantic: {r['semantic_rank']}")
+        print(f"     {r['description']}")
