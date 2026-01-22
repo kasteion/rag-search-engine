@@ -4,6 +4,7 @@ import time
 
 from dotenv import load_dotenv
 from google import genai
+from sentence_transformers import CrossEncoder
 
 from .keyword_search import InvertedIndex
 from .semantic_search import ChunkedSemanticSearch
@@ -351,6 +352,27 @@ def batch_rerank_command(query: str, k: int, limit:int):
     for i, r in enumerate(results, start=1):
         print(f"{i}. {r['title']}")
         print(f"     Rerank Rank: {r.get('rerank_rank', limit * 5)}")
+        print(f"     RRF Score: {r['rrf_score']}")
+        print(f"     BM25 Rank: {r['bm25_rank']}, Semantic: {r['semantic_rank']}")
+        print(f"     {r['description']}")
+
+def cross_encoder_rerank_command(query: str, k: int, limit:int):
+    results, search = rrf_search(query, k, limit * 5)
+    
+    pairs = [[query, f"{doc.get('title', '')} - {doc.get('document', '')}"] for doc in results]
+
+    cross_encoder = CrossEncoder("cross-encoder/ms-marco-TinyBERT-L2-v2")
+
+    scores = cross_encoder.predict(pairs)
+
+    for i, r in enumerate(results):
+        r['cross_encoder_score'] = scores[i]
+    
+    results = sorted(results, key=lambda r: r['cross_encoder_score'], reverse=True)[:limit]
+
+    for i, r in enumerate(results, start=1):
+        print(f"{i}. {r['title']}")
+        print(f"     Cross Encoder Score: {r['cross_encoder_score']}")
         print(f"     RRF Score: {r['rrf_score']}")
         print(f"     BM25 Rank: {r['bm25_rank']}, Semantic: {r['semantic_rank']}")
         print(f"     {r['description']}")
