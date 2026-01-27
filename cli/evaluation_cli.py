@@ -40,7 +40,10 @@ def main():
                 relevant_retrieved.append(title)
         
         precision = len(relevant_retrieved) / len(results)
+        recall = len(relevant_retrieved) / len(relevant_docs)
+
         print(f"  - Precision@{limit}: {precision:.4f}")
+        print(f"  - Recall@{limit}: {recall:.4f}")
         print(f"  - Retrieved: {', '.join(retrieved)}")
         print(f"  - Relevant: {', '.join(relevant_retrieved)}")
 
