@@ -41,9 +41,11 @@ def main():
         
         precision = len(relevant_retrieved) / len(results)
         recall = len(relevant_retrieved) / len(relevant_docs)
+        f1 = 2 * (precision * recall) / (precision + recall)
 
         print(f"  - Precision@{limit}: {precision:.4f}")
         print(f"  - Recall@{limit}: {recall:.4f}")
+        print(f"  - F1 Score: {f1:.4f}")
         print(f"  - Retrieved: {', '.join(retrieved)}")
         print(f"  - Relevant: {', '.join(relevant_retrieved)}")
 
