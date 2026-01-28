@@ -32,6 +32,7 @@ def main() -> None:
     rrf_search_parser.add_argument("--limit", type=int, default=5, help="Results limit")
     rrf_search_parser.add_argument("--enhance", type=str, choices=["spell", "rewrite", "expand"], help="Query enhancement method")
     rrf_search_parser.add_argument("--rerank-method", type=str, choices=["individual", "batch", "cross_encoder"], help="LLM rerank")
+    rrf_search_parser.add_argument("--debug", action=argparse.BooleanOptionalAction, help="Optional debug")
 
     args = parser.parse_args()
 
@@ -41,8 +42,14 @@ def main() -> None:
         case "weighted-search":
             weighted_search_command(args.query, args.alpha, args.limit)
         case "rrf-search":
+            if args.debug:
+                print("Original query:", args.query)
+
             if args.enhance:
                 args.query = enhance_query(args.enhance, args.query)
+            
+            if args.debug:
+                print("Enhanced query:", args.query)
 
             match args.rerank_method:
                 case "individual":
@@ -50,7 +57,7 @@ def main() -> None:
                 case "batch":
                     batch_rerank_command(args.query, args.k, args.limit)
                 case "cross_encoder":
-                    cross_encoder_rerank_command(args.query, args.k, args.limit)
+                    cross_encoder_rerank_command(args.query, args.k, args.limit, args.debug)
                 case _:
                     rrf_search_command(args.query, args.k, args.limit)
         case _:

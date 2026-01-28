@@ -356,8 +356,10 @@ def batch_rerank_command(query: str, k: int, limit:int):
         print(f"     BM25 Rank: {r['bm25_rank']}, Semantic: {r['semantic_rank']}")
         print(f"     {r['description']}")
 
-def cross_encoder_rerank_command(query: str, k: int, limit:int):
-    results, search = rrf_search(query, k, limit * 5)
+def cross_encoder_rerank_command(query: str, k: int, limit:int, debug:bool):
+    results, _ = rrf_search(query, k, limit * 5)
+    if debug:
+        print("RRF Search Results:", results)
     
     pairs = [[query, f"{doc.get('title', '')} - {doc.get('document', '')}"] for doc in results]
 
@@ -367,6 +369,9 @@ def cross_encoder_rerank_command(query: str, k: int, limit:int):
 
     for i, r in enumerate(results):
         r['cross_encoder_score'] = scores[i]
+    
+    if debug:
+        print("Re-ranked results", sorted(results, key=lambda r: r['cross_encoder_score'], reverse=True))
     
     results = sorted(results, key=lambda r: r['cross_encoder_score'], reverse=True)[:limit]
 
