@@ -7,7 +7,9 @@ from lib.hybrid_search import (
     enhance_query,
     individual_rerank_command,
     batch_rerank_command,
-    cross_encoder_rerank_command
+    cross_encoder_rerank_command,
+    cross_encoder_rerank,
+    evaluate
 )
 from lib.search_utils import (
     DEFAULT_HYBRID_SEARCH_ALPHA,
@@ -33,6 +35,7 @@ def main() -> None:
     rrf_search_parser.add_argument("--enhance", type=str, choices=["spell", "rewrite", "expand"], help="Query enhancement method")
     rrf_search_parser.add_argument("--rerank-method", type=str, choices=["individual", "batch", "cross_encoder"], help="LLM rerank")
     rrf_search_parser.add_argument("--debug", action=argparse.BooleanOptionalAction, help="Optional debug")
+    rrf_search_parser.add_argument("--evaluate", action=argparse.BooleanOptionalAction, default=False, help="LLM as a judge evaluation")
 
     args = parser.parse_args()
 
@@ -51,15 +54,23 @@ def main() -> None:
             if args.debug:
                 print("Enhanced query:", args.query)
 
-            match args.rerank_method:
-                case "individual":
-                    individual_rerank_command(args.query, args.k, args.limit)
-                case "batch":
-                    batch_rerank_command(args.query, args.k, args.limit)
-                case "cross_encoder":
-                    cross_encoder_rerank_command(args.query, args.k, args.limit, args.debug)
-                case _:
-                    rrf_search_command(args.query, args.k, args.limit)
+            if args.rerank_method:
+                match args.rerank_method:
+                    case "individual":
+                        individual_rerank_command(args.query, args.k, args.limit)
+                    case "batch":
+                        batch_rerank_command(args.query, args.k, args.limit)
+                    case "cross_encoder":
+                        cross_encoder_rerank_command(args.query, args.k, args.limit, args.debug)
+                    case _:
+                        rrf_search_command(args.query, args.k, args.limit)
+            
+            if args.evaluate:
+                results = cross_encoder_rerank(args.query, args.k, args.limit)
+                evaluations = evaluate(args.query, results)
+                for i, eval in enumerate(evaluations, start=1):
+                    print(f"{i}. {eval.get('title', '')}: {eval.get('judge_scores', 0)}/3")
+
         case _:
             parser.print_help()
 

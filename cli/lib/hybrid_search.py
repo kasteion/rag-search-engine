@@ -356,6 +356,22 @@ def batch_rerank_command(query: str, k: int, limit:int):
         print(f"     BM25 Rank: {r['bm25_rank']}, Semantic: {r['semantic_rank']}")
         print(f"     {r['description']}")
 
+def cross_encoder_rerank(query:str, k: int, limit: int):
+    results, _ = rrf_search(query, k, limit * 5)
+
+    pairs = [[query, f"{doc.get('title', '')} - {doc.get('document', '')}"] for doc in results]
+
+    cross_encoder = CrossEncoder("cross-encoder/ms-marco-TinyBERT-L2-v2")
+
+    scores = cross_encoder.predict(pairs)
+
+    for i, r in enumerate(results):
+        r['cross_encoder_score'] = scores[i]
+    
+    results = sorted(results, key=lambda r: r['cross_encoder_score'], reverse=True)[:limit]
+
+    return results
+
 def cross_encoder_rerank_command(query: str, k: int, limit:int, debug:bool):
     results, _ = rrf_search(query, k, limit * 5)
     if debug:
@@ -381,3 +397,50 @@ def cross_encoder_rerank_command(query: str, k: int, limit:int, debug:bool):
         print(f"     RRF Score: {r['rrf_score']}")
         print(f"     BM25 Rank: {r['bm25_rank']}, Semantic: {r['semantic_rank']}")
         print(f"     {r['description']}")
+
+def format_results(results:list[dict]) -> list[str]:
+    formatted_results = []
+    for r in results:
+        # id = r['id']
+        # doc:dict = search.semantic_search.document_map[id]
+        # formatted_results.append(f"{doc.get("title", "")} - {doc.get("description", "")}")
+        formatted_results.append(f"{r.get("title", "")} - {r.get("description", "")}")
+
+    return formatted_results
+
+
+def evaluate(query: str,results:list[dict]):
+    formatted_results = format_results(results)
+
+    judge_prompt = f"""Rate how relevant each result is to this query on a 0-3 scale:
+
+    Query: "{query}"
+
+    Results:
+    {chr(10).join(formatted_results)}
+
+    Scale:
+    - 3: Highly relevant
+    - 2: Relevant
+    - 1: Marginally relevant
+    - 0: Not relevant
+
+    Do NOT give any numbers out than 0, 1, 2, or 3.
+
+    Return ONLY the scores in the same order you were given the documents. Return a valid JSON list, nothing else. For example:
+
+    [2, 0, 3, 2, 0, 1]"""
+
+    client = genai.Client(api_key=api_key)
+    model = "gemini-2.5-flash"
+
+    try:
+        response = client.models.generate_content(model=model, contents=judge_prompt)
+        judge_scores = json.loads(response.text.replace('```json', '').replace('```', ''))
+
+        for i, s in enumerate(judge_scores):
+            results[i]['judge_scores'] = int(s)
+    except Exception as e:
+        print(e)
+
+    return results
