@@ -29,6 +29,10 @@ def main():
     citations_parser.add_argument("query", type=str, help="Search query for RAG")
     citations_parser.add_argument("--limit", type=int, default=5, help="Results limit")
 
+    question_parser = subparsers.add_parser("question", help="Perform RAG (search + answer)")
+    question_parser.add_argument("question", type=str, help="Question for RAG")
+    question_parser.add_argument("--limit", type=int, default=5, help="Results limit")
+
     args = parser.parse_args()
 
     client = genai.Client(api_key=api_key)
@@ -101,6 +105,36 @@ def main():
             - If sources disagree, mention the different viewpoints
             - If the answer isn't in the documents, say "I don't have enough information"
             - Be direct and informative
+
+            Answer:"""
+            response = client.models.generate_content(model=model, contents=prompt)
+
+            print("Search Results:")
+            for r in docs:
+                print(f" - {r['title']}")
+
+            print("\nLLM Answer:")
+            print(response.text)
+        
+        case "question":
+            question = args.question
+            docs, search = rrf_search(question, 60, args.limit)
+            context = [search.semantic_search.document_map[d['id']] for d in docs]
+            
+            prompt = f"""Answer the user's question based on the provided movies that are available on Hoopla.
+
+            This should be tailored to Hoopla users. Hoopla is a movie streaming service.
+
+            Question: {question}
+
+            Documents:
+            {context}
+
+            Instructions:
+            - Answer questions directly and concisely
+            - Be casual and conversational
+            - Don't be cringe or hype-y
+            - Talk like a normal person would in a chat conversation
 
             Answer:"""
             response = client.models.generate_content(model=model, contents=prompt)
