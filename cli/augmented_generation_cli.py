@@ -25,6 +25,10 @@ def main():
     summarize_parser.add_argument("query", type=str, help="Search query for RAG")
     summarize_parser.add_argument("--limit", type=int, default=5, help="Results limit")
 
+    citations_parser = subparsers.add_parser("citations", help="Perform RAG (seach + citations)")
+    citations_parser.add_argument("query", type=str, help="Search query for RAG")
+    citations_parser.add_argument("--limit", type=int, default=5, help="Results limit")
+
     args = parser.parse_args()
 
     client = genai.Client(api_key=api_key)
@@ -74,6 +78,38 @@ def main():
                 print(f" - {r['title']}")
 
             print("\nLLM Summary:")
+            print(response.text)
+        
+        case "citations":
+            query = args.query
+            docs, _ = rrf_search(query, 60, args.limit)
+
+            prompt = f"""Answer the question or provide information based on the provided documents.
+
+            This should be tailored to Hoopla users. Hoopla is a movie streaming service.
+
+            If not enough information is available to give a good answer, say so but give as good of an answer as you can while citing the sources you have.
+
+            Query: {query}
+
+            Documents:
+            {docs}
+
+            Instructions:
+            - Provide a comprehensive answer that addresses the query
+            - Cite sources using [1], [2], etc. format when referencing information
+            - If sources disagree, mention the different viewpoints
+            - If the answer isn't in the documents, say "I don't have enough information"
+            - Be direct and informative
+
+            Answer:"""
+            response = client.models.generate_content(model=model, contents=prompt)
+
+            print("Search Results:")
+            for r in docs:
+                print(f" - {r['title']}")
+
+            print("\nLLM Answer:")
             print(response.text)
         case _:
             parser.print_help()
